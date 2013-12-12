@@ -20,9 +20,11 @@ import android.annotation.ColorInt;
 import android.annotation.DrawableRes;
 import android.annotation.LayoutRes;
 import android.app.StatusBarManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.database.ContentObserver;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
@@ -34,10 +36,16 @@ import android.media.AudioManager;
 import android.media.session.MediaSessionLegacyHelper;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IPowerManager;
+import android.os.PowerManager;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.DisplayCutout;
 import android.view.GestureDetector;
@@ -50,6 +58,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
@@ -111,6 +120,13 @@ public class StatusBarWindowView extends FrameLayout {
     private boolean mExpandAnimationPending;
     private boolean mSuppressingWakeUpGesture;
 
+    private int mStatusBarHeaderHeight;
+
+    private boolean mDoubleTapToSleepEnabled;
+    private GestureDetector mDoubleTapGesture;
+    private Handler mHandler = new Handler();
+    private SettingsObserver mSettingsObserver;
+
     private final GestureDetector.SimpleOnGestureListener mGestureListener =
             new GestureDetector.SimpleOnGestureListener() {
         @Override
@@ -161,6 +177,10 @@ public class StatusBarWindowView extends FrameLayout {
         Dependency.get(TunerService.class).addTunable(mTunable,
                 Settings.Secure.DOZE_DOUBLE_TAP_GESTURE,
                 Settings.Secure.DOZE_TAP_SCREEN_GESTURE);
+
+        mStatusBarHeaderHeight = context
+                .getResources().getDimensionPixelSize(R.dimen.status_bar_height);
+        mSettingsObserver = new SettingsObserver(mHandler);
     }
 
     @Override
@@ -300,6 +320,27 @@ public class StatusBarWindowView extends FrameLayout {
     protected void onAttachedToWindow () {
         super.onAttachedToWindow();
         setWillNotDraw(!DEBUG);
+
+        mSettingsObserver.observe();
+        mDoubleTapGesture = new GestureDetector(mContext, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+                Log.d(TAG, "Gesture!!");
+                if (pm != null) {
+                    pm.goToSleep(e.getEventTime());
+                } else {
+                    Log.d(TAG, "getSystemService returned null PowerManager");
+                }
+                return true;
+            }
+        });
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mSettingsObserver.unobserve();
     }
 
     @Override
@@ -414,6 +455,11 @@ public class StatusBarWindowView extends FrameLayout {
             return true;
         }
         boolean intercept = false;
+        if (mDoubleTapToSleepEnabled
+                && ev.getY() < mStatusBarHeaderHeight) {
+            if (DEBUG) Log.w(TAG, "logging double tap gesture");
+            mDoubleTapGesture.onTouchEvent(ev);
+        }
         if (mNotificationPanel.isFullyExpanded()
                 && stackScrollLayout.getVisibility() == View.VISIBLE
                 && mStatusBarStateController.getState() == StatusBarState.KEYGUARD
@@ -880,5 +926,38 @@ public class StatusBarWindowView extends FrameLayout {
         }
     };
 
+    class SettingsObserver extends ContentObserver {
+        SettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        void observe() {
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.DOUBLE_TAP_SLEEP_GESTURE), false, this);
+            update();
+        }
+
+        void unobserve() {
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.unregisterContentObserver(this);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            update();
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            update();
+        }
+
+        public void update() {
+            ContentResolver resolver = mContext.getContentResolver();
+            mDoubleTapToSleepEnabled = Settings.System.getInt(
+                    resolver, Settings.System.DOUBLE_TAP_SLEEP_GESTURE, 1) == 1;
+        }
+    }
 }
 
