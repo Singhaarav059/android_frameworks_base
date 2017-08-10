@@ -46,4 +46,10 @@
     <string-array name="config_vendorPlatformSignatures">
     </string-array>
 
+    <!-- One-handed mode feature is supported or not. -->
+    <bool name="config_onehanded_mode">true</bool>
+
+    <!-- Protect zone padding to ignore touch for onehand panel. -->
+    <dimen name="config_onehandProtectZonePadding">30dp</dimen>
+
 </resources>
