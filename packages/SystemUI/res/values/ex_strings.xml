@@ -108,4 +108,6 @@
     <!-- QS Recorder Tile -->
     <string name="quick_settings_recorder_label">Recorder</string>
 
+    <!-- Text for switch default data sub in expanded CellularTile -->
+    <string name="use_data">Use %s for data</string>
 </resources>
