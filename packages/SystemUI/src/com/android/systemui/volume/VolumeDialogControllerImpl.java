@@ -74,6 +74,8 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.android.internal.util.custom.recorder.InternalAudioRecorder;
+
 /**
  *  Source of truth for all state / events related to the volume dialog.  No presentation.
  *
@@ -138,6 +140,7 @@ public class VolumeDialogControllerImpl implements VolumeDialogController, Dumpa
     private UserActivityListener mUserActivityListener;
 
     protected final VC mVolumeController = new VC();
+    private boolean mIsInternalAudioRecordingSupported;
 
     private boolean mIsInternalAudioRecordingSupported;
 
