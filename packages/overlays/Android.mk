@@ -28,6 +28,10 @@ LOCAL_REQUIRED_MODULES := \
 	DisplayCutoutEmulationDoubleOverlay \
 	DisplayCutoutEmulationTallOverlay \
 	FontNotoSerifSourceOverlay \
+        GesturalNavigationOverlayExtraWideBack \
+        GesturalNavigationOverlayDefaultBack \
+        GesturalNavigationOverlayNarrowBack \
+        GesturalNavigationOverlayWideBack \
 	IconPackCircularAndroidOverlay \
 	IconPackCircularLauncherOverlay \
 	IconPackCircularSettingsOverlay \
@@ -49,10 +53,7 @@ LOCAL_REQUIRED_MODULES := \
 	IconShapeTeardropOverlay \
 	NavigationBarMode3ButtonOverlay \
 	NavigationBarMode2ButtonOverlay \
-	NavigationBarModeGesturalOverlay \
-	NavigationBarModeGesturalOverlayNarrowBack \
-	NavigationBarModeGesturalOverlayWideBack \
-	NavigationBarModeGesturalOverlayExtraWideBack
+	NavigationBarModeGesturalOverlay
 
 include $(BUILD_PHONY_PACKAGE)
 include $(CLEAR_VARS)

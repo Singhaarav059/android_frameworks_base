@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 -->
-<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <!-- Name of overlay [CHAR LIMIT=64] -->
-    <string name="navigation_bar_mode_title" translatable="false">Gestural Navigation Bar</string>
+<resources>
+    <!-- Controls the size of the back gesture inset. -->
+    <dimen name="config_backGestureInset">18dp</dimen>
 </resources>
