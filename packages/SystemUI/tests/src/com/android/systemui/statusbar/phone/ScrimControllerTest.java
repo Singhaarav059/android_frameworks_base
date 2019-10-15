@@ -323,28 +323,6 @@ public class ScrimControllerTest extends SysuiTestCase {
     }
 
     @Test
-    public void panelExpansionAffectsAlpha() {
-        mScrimController.setPanelExpansion(0f);
-        mScrimController.setPanelExpansion(0.5f);
-        mScrimController.transitionTo(ScrimState.UNLOCKED);
-        mScrimController.finishAnimationsImmediately();
-
-        final float scrimAlpha = mScrimBehind.getViewAlpha();
-        reset(mScrimBehind);
-        mScrimController.setExpansionAffectsAlpha(false);
-        mScrimController.setPanelExpansion(0.8f);
-        verifyZeroInteractions(mScrimBehind);
-        Assert.assertEquals("Scrim opacity shouldn't change when setExpansionAffectsAlpha "
-                + "is false", scrimAlpha, mScrimBehind.getViewAlpha(), 0.01f);
-
-        mScrimController.setExpansionAffectsAlpha(true);
-        mScrimController.setPanelExpansion(0.1f);
-        mScrimController.finishAnimationsImmediately();
-        Assert.assertNotEquals("Scrim opacity should change when setExpansionAffectsAlpha "
-                + "is true", scrimAlpha, mScrimBehind.getViewAlpha(), 0.01f);
-    }
-
-    @Test
     public void transitionToUnlockedFromAod() {
         // Simulate unlock with fingerprint
         mScrimController.transitionTo(ScrimState.AOD);

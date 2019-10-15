@@ -143,7 +143,6 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, OnCo
     private float mExpansionFraction = 1f;
 
     private boolean mDarkenWhileDragging;
-    private boolean mExpansionAffectsAlpha = true;
     protected boolean mAnimateChange;
     private boolean mUpdatePending;
     private boolean mTracking;
@@ -253,7 +252,6 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, OnCo
         mCurrentBehindTint = state.getBehindTint();
         mCurrentInFrontAlpha = state.getFrontAlpha();
         mCurrentBehindAlpha = state.getBehindAlpha();
-        applyExpansionToAlpha();
 
         // Scrim might acquire focus when user is navigating with a D-pad or a keyboard.
         // We need to disable focus otherwise AOD would end up with a gray overlay.
@@ -387,11 +385,9 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, OnCo
 
             final boolean keyguardOrUnlocked = mState == ScrimState.UNLOCKED
                     || mState == ScrimState.KEYGUARD || mState == ScrimState.PULSING;
-            if (!keyguardOrUnlocked || !mExpansionAffectsAlpha) {
+            if (!keyguardOrUnlocked) {
                 return;
             }
-
-            applyExpansionToAlpha();
 
             if (mUpdatePending) {
                 return;
@@ -425,36 +421,6 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, OnCo
             scrim.setTag(TAG_START_ALPHA, newStartValue);
             scrim.setTag(TAG_END_ALPHA, alpha);
             previousAnimator.setCurrentPlayTime(previousAnimator.getCurrentPlayTime());
-        }
-    }
-
-    private void applyExpansionToAlpha() {
-        if (!mExpansionAffectsAlpha) {
-            return;
-        }
-
-        if (mState == ScrimState.UNLOCKED) {
-            // Darken scrim as you pull down the shade when unlocked
-            float behindFraction = getInterpolatedFraction();
-            behindFraction = (float) Math.pow(behindFraction, 0.8f);
-            mCurrentBehindAlpha = behindFraction * GRADIENT_SCRIM_ALPHA_BUSY;
-            mCurrentInFrontAlpha = 0;
-        } else if (mState == ScrimState.KEYGUARD || mState == ScrimState.PULSING) {
-            // Either darken of make the scrim transparent when you
-            // pull down the shade
-            float interpolatedFract = getInterpolatedFraction();
-            float alphaBehind = mState.getBehindAlpha();
-            if (mDarkenWhileDragging) {
-                mCurrentBehindAlpha = MathUtils.lerp(GRADIENT_SCRIM_ALPHA_BUSY, alphaBehind,
-                        interpolatedFract);
-                mCurrentInFrontAlpha = 0;
-            } else {
-                mCurrentBehindAlpha = MathUtils.lerp(0 /* start */, alphaBehind,
-                        interpolatedFract);
-                mCurrentInFrontAlpha = 0;
-            }
-            mCurrentBehindTint = ColorUtils.blendARGB(ScrimState.BOUNCER.getBehindTint(),
-                    mState.getBehindTint(), interpolatedFract);
         }
     }
 
@@ -905,10 +871,6 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, OnCo
 
     public void onScreenTurnedOff() {
         mScreenOn = false;
-    }
-
-    public void setExpansionAffectsAlpha(boolean expansionAffectsAlpha) {
-        mExpansionAffectsAlpha = expansionAffectsAlpha;
     }
 
     public void setKeyguardOccluded(boolean keyguardOccluded) {
